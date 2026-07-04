@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LifeFlow — Tasks & Diary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --charcoal:#1b1c1f;
+    --charcoal-soft:#25262b;
+    --charcoal-card:#2c2d33;
+    --orange:#f97316;
+    --orange-soft:#fdba74;
+    --cream:#f7f4ee;
+    --white:#ffffff;
+    --muted:#9a9ba3;
+    --green:#4ade80;
+    --red:#f87171;
+    --border:#3a3b42;
+    --radius:16px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.28);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter', sans-serif;
+    background:var(--charcoal);
+    color:var(--cream);
+    min-height:100vh;
+  }
+  h1,h2,h3,.brand,.tab,.btn,.stat-num{font-family:'Space Grotesk', sans-serif;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:22px clamp(16px,4vw,48px);
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    background:rgba(27,28,31,0.92);
+    backdrop-filter:blur(10px);
+    z-index:50;
+  }
+  .brand{
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--orange);
+    box-shadow:0 0 12px var(--orange);
+  }
+  .notif-status{
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    padding:8px 14px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    transition:.2s;
+  }
+  .notif-status:hover{border-color:var(--orange-soft);color:var(--cream);}
+  .notif-status .led{width:8px;height:8px;border-radius:50%;background:var(--muted);}
+  .notif-status.on .led{background:var(--green);box-shadow:0 0 8px var(--green);}
+  .notif-status.off .led{background:var(--red);}
+
+  /* ---------- Tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:6px;
+    padding:0 clamp(16px,4vw,48px);
+    margin-top:24px;
+  }
+  .tab{
+    padding:10px 20px;
+    border-radius:12px 12px 0 0;
+    background:transparent;
+    color:var(--muted);
+    border:none;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+    border-bottom:2px solid transparent;
+  }
+  .tab.active{
+    color:var(--orange);
+    border-bottom:2px solid var(--orange);
+  }
+  .tab:hover:not(.active){color:var(--cream);}
+
+  main{
+    max-width:1000px;
+    margin:0 auto;
+    padding:28px clamp(16px,4vw,48px) 80px;
+  }
+  .view{display:none;animation:fade .35s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- Stats row ---------- */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:14px;
+    margin-bottom:26px;
+  }
+  .stat-card{
+    background:var(--charcoal-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 20px;
+  }
+  .stat-num{font-size:28px;font-weight:700;color:var(--orange);}
+  .stat-label{font-size:12.5px;color:var(--muted);margin-top:4px;}
+
+  /* ---------- Card / form ---------- */
+  .card{
+    background:var(--charcoal-card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:22px;
+    box-shadow:var(--shadow);
+  }
+  .card h2{margin:0 0 16px;font-size:18px;font-weight:600;}
+  .form-grid{
+    display:grid;
+    grid-template-columns:2fr 1fr 1fr;
+    gap:12px;
+  }
+  .form-grid.diary-grid{grid-template-columns:1fr 1fr;}
+  @media(max-width:700px){.form-grid{grid-template-columns:1fr;}}
+
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:6px;
+    font-weight:600;
+  }
+  input[type=text], input[type=date], input[type=time], textarea, select{
+    width:100%;
+    background:var(--charcoal-soft);
+    border:1px solid var(--border);
+    color:var(--cream);
+    padding:11px 13px;
+    border-radius:10px;
+    font-size:14px;
+    font-family:inherit;
+    outline:none;
+    transition:.2s;
+  }
+  input:focus, textarea:focus, select:focus{border-color:var(--orange);}
+  textarea{resize:vertical;min-height:90px;}
+
+  .checkline{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:14px;
+    font-size:13.5px;
+    color:var(--muted);
+  }
+  .checkline input{width:auto;accent-color:var(--orange);}
+
+  .btn{
+    background:var(--orange);
+    color:#1b1c1f;
+    border:none;
+    padding:11px 20px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    transition:.2s;
+    margin-top:16px;
+  }
+  .btn:hover{background:var(--orange-soft);}
+  .btn.ghost{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--cream);
+  }
+  .btn.ghost:hover{border-color:var(--orange);color:var(--orange);}
+  .btn.small{padding:7px 13px;font-size:12.5px;margin-top:0;}
+
+  /* ---------- Filters ---------- */
+  .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .chip{
+    padding:7px 15px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--muted);
+    font-size:13px;
+    cursor:pointer;
+    transition:.2s;
+  }
+  .chip.active{background:var(--orange);border-color:var(--orange);color:#1b1c1f;font-weight:700;}
+
+  /* ---------- Task list ---------- */
+  .task-list{display:flex;flex-direction:column;gap:10px;}
+  .task{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    background:var(--charcoal-card);
+    border:1px solid var(--border);
+    border-left:3px solid var(--orange);
+    border-radius:12px;
+    padding:14px 16px;
+    transition:.2s;
+  }
+  .task.done{border-left-color:var(--green);opacity:.55;}
+  .task.overdue{border-left-color:var(--red);}
+  .task .check{
+    width:22px;height:22px;
+    border-radius:50%;
+    border:2px solid var(--muted);
+    flex-shrink:0;
+    cursor:pointer;
+    margin-top:2px;
+    display:flex;align-items:center;justify-content:center;
+    transition:.2s;
+  }
+  .task.done .check{background:var(--green);border-color:var(--green);}
+  .task.done .check::after{content:'✓';color:#1b1c1f;font-size:13px;font-weight:700;}
+  .task-body{flex:1;min-width:0;}
+  .task-title{font-weight:600;font-size:15px;}
+  .task.done .task-title{text-decoration:line-through;color:var(--muted);}
+  .task-meta{
+    display:flex;gap:10px;flex-wrap:wrap;
+    font-size:12px;color:var(--muted);margin-top:5px;
+  }
+  .badge{
+    padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;
+  }
+  .badge.high{background:rgba(248,113,113,.15);color:var(--red);}
+  .badge.medium{background:rgba(251,191,36,.15);color:#fbbf24;}
+  .badge.low{background:rgba(74,222,128,.15);color:var(--green);}
+  .task-actions{display:flex;gap:6px;flex-shrink:0;}
+  .icon-btn{
+    background:transparent;border:none;color:var(--muted);
+    cursor:pointer;font-size:15px;padding:4px 6px;border-radius:6px;transition:.2s;
+  }
+  .icon-btn:hover{color:var(--orange);background:var(--charcoal-soft);}
+  .empty{
+    text-align:center;color:var(--muted);padding:40px 20px;font-size:14px;
+  }
+
+  /* ---------- Diary ---------- */
+  .diary-list{display:flex;flex-direction:column;gap:12px;}
+  .diary-entry{
+    background:var(--charcoal-card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .diary-entry .d-head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
+  }
+  .diary-entry .d-date{font-weight:600;font-size:14px;color:var(--orange-soft);}
+  .diary-entry .d-mood{font-size:18px;}
+  .diary-entry .d-text{font-size:14px;line-height:1.6;color:var(--cream);white-space:pre-wrap;}
+  .mood-picker{display:flex;gap:8px;margin-top:6px;}
+  .mood-btn{
+    font-size:22px;background:var(--charcoal-soft);border:1px solid var(--border);
+    border-radius:10px;padding:8px 10px;cursor:pointer;transition:.2s;
+  }
+  .mood-btn.selected{border-color:var(--orange);background:rgba(249,115,22,.15);}
+
+  .search-bar{margin-bottom:16px;}
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--charcoal-card);border:1px solid var(--orange);
+    color:var(--cream);padding:13px 22px;border-radius:12px;
+    font-size:14px;box-shadow:var(--shadow);
+    opacity:0;pointer-events:none;transition:.35s;
+    z-index:200;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  ::selection{background:var(--orange);color:#1b1c1f;}
+  @media(prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span>LifeFlow</div>
+  <div class="notif-status off" id="notifStatus" onclick="requestNotifPermission()">
+    <span class="led"></span><span id="notifLabel">Enable reminders</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-view="tasksView" onclick="switchTab('tasksView', this)">Tasks</button>
+  <button class="tab" data-view="diaryView" onclick="switchTab('diaryView', this)">Diary</button>
+</div>
+
+<main>
+
+  <!-- ===================== TASKS VIEW ===================== -->
+  <section class="view active" id="tasksView">
+
+    <div class="stats">
+      <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Total tasks</div></div>
+      <div class="stat-card"><div class="stat-num" id="statPending">0</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-num" id="statDone">0</div><div class="stat-label">Completed</div></div>
+      <div class="stat-card"><div class="stat-num" id="statToday">0</div><div class="stat-label">Due today</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Add a task</h2>
+      <div class="form-grid">
+        <div>
+          <label>Task title</label>
+          <input type="text" id="taskTitle" placeholder="e.g. Submit client invoice">
+        </div>
+        <div>
+          <label>Category</label>
+          <select id="taskCategory">
+            <option>Work</option>
+            <option>Personal</option>
+            <option>Study</option>
+            <option>Health</option>
+            <option>Deen</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Priority</label>
+          <select id="taskPriority">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div>
+          <label>Due date</label>
+          <input type="date" id="taskDate">
+        </div>
+        <div>
+          <label>Due time</label>
+          <input type="time" id="taskTime">
+        </div>
+        <div>
+          <label>Notes (optional)</label>
+          <input type="text" id="taskNotes" placeholder="Any extra detail">
+        </div>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" id="taskNotify" checked>
+        <label style="margin:0" for="taskNotify">Remind me with a notification at the due time</label>
+      </div>
+      <button class="btn" onclick="addTask()">Add task</button>
+    </div>
+
+    <div class="filters">
+      <button class="chip active" data-filter="all" onclick="setFilter('all', this)">All</button>
+      <button class="chip" data-filter="pending" onclick="setFilter('pending', this)">Pending</button>
+      <button class="chip" data-filter="done" onclick="setFilter('done', this)">Completed</button>
+      <button class="chip" data-filter="today" onclick="setFilter('today', this)">Today</button>
+    </div>
+
+    <div class="task-list" id="taskList"></div>
+  </section>
+
+  <!-- ===================== DIARY VIEW ===================== -->
+  <section class="view" id="diaryView">
+
+    <div class="card">
+      <h2>New diary entry</h2>
+      <div class="form-grid diary-grid">
+        <div>
+          <label>Date</label>
+          <input type="date" id="diaryDate">
+        </div>
+        <div>
+          <label>How's your day?</label>
+          <div class="mood-picker" id="moodPicker">
+            <button class="mood-btn" data-mood="😊" onclick="selectMood('😊', this)">😊</button>
+            <button class="mood-btn" data-mood="😐" onclick="selectMood('😐', this)">😐</button>
+            <button class="mood-btn" data-mood="😔" onclick="selectMood('😔', this)">😔</button>
+            <button class="mood-btn" data-mood="🤲" onclick="selectMood('🤲', this)">🤲</button>
+            <button class="mood-btn" data-mood="🔥" onclick="selectMood('🔥', this)">🔥</button>
+          </div>
+        </div>
+      </div>
+      <label style="margin-top:14px">Write freely</label>
+      <textarea id="diaryText" placeholder="Aaj ka din kaisa raha... thoughts, gratitude, dua, reflection — jo dil kare likhein."></textarea>
+      <button class="btn" onclick="addDiaryEntry()">Save entry</button>
+    </div>
+
+    <input type="text" class="search-bar" id="diarySearch" placeholder="Search your entries..." oninput="renderDiary()" style="background:var(--charcoal-card);border:1px solid var(--border);color:var(--cream);padding:11px 13px;border-radius:10px;width:100%;font-family:inherit;">
+
+    <div class="diary-list" id="diaryList"></div>
+  </section>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ======================= STATE ======================= */
+let tasks = JSON.parse(localStorage.getItem('lifeflow_tasks') || '[]');
+let diary = JSON.parse(localStorage.getItem('lifeflow_diary') || '[]');
+let currentFilter = 'all';
+let selectedMood = '😊';
+
+function saveTasks(){ localStorage.setItem('lifeflow_tasks', JSON.stringify(tasks)); }
+function saveDiary(){ localStorage.setItem('lifeflow_diary', JSON.stringify(diary)); }
+
+/* ======================= TABS ======================= */
+function switchTab(viewId, btn){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ======================= TOAST ======================= */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2600);
+}
+
+/* ======================= NOTIFICATIONS ======================= */
+function updateNotifBadge(){
+  const el = document.getElementById('notifStatus');
+  const label = document.getElementById('notifLabel');
+  if(!('Notification' in window)){
+    el.className = 'notif-status off';
+    label.textContent = 'Notifications not supported';
+    return;
+  }
+  if(Notification.permission === 'granted'){
+    el.className = 'notif-status on';
+    label.textContent = 'Reminders on';
+  } else {
+    el.className = 'notif-status off';
+    label.textContent = 'Enable reminders';
+  }
+}
+
+function requestNotifPermission(){
+  if(!('Notification' in window)){
+    showToast('Your browser does not support notifications.');
+    return;
+  }
+  Notification.requestPermission().then(updateNotifBadge);
+}
+
+function fireNotification(task){
+  if('Notification' in window && Notification.permission === 'granted'){
+    new Notification('LifeFlow reminder', {
+      body: task.title + (task.notes ? ' — ' + task.notes : ''),
+      icon: '',
+      tag: task.id
+    });
+  } else {
+    showToast('Reminder: ' + task.title);
+  }
+}
+
+// Checks every 20 seconds whether any task's due time has arrived.
+setInterval(() => {
+  const now = new Date();
+  tasks.forEach(task => {
+    if(task.notify && !task.done && !task.notified && task.date && task.time){
+      const due = new Date(task.date + 'T' + task.time);
+      if(now >= due && (now - due) < 60000){
+        fireNotification(task);
+        task.notified = true;
+        saveTasks();
+      }
+    }
+  });
+}, 20000);
+
+/* ======================= TASKS ======================= */
+function addTask(){
+  const title = document.getElementById('taskTitle').value.trim();
+  if(!title){ showToast('Please enter a task title.'); return; }
+
+  const task = {
+    id: 'task_' + Date.now(),
+    title,
+    category: document.getElementById('taskCategory').value,
+    priority: document.getElementById('taskPriority').value,
+    date: document.getElementById('taskDate').value,
+    time: document.getElementById('taskTime').value,
+    notes: document.getElementById('taskNotes').value.trim(),
+    notify: document.getElementById('taskNotify').checked,
+    done: false,
+    notified: false,
+    createdAt: Date.now()
+  };
+
+  tasks.unshift(task);
+  saveTasks();
+
+  if(task.notify && Notification && Notification.permission === 'default'){
+    requestNotifPermission();
+  }
+
+  document.getElementById('taskTitle').value = '';
+  document.getElementById('taskNotes').value = '';
+  document.getElementById('taskDate').value = '';
+  document.getElementById('taskTime').value = '';
+
+  renderTasks();
+  showToast('Task added.');
+}
+
+function toggleDone(id){
+  const t = tasks.find(x => x.id === id);
+  if(t) t.done = !t.done;
+  saveTasks();
+  renderTasks();
+}
+
+function deleteTask(id){
+  tasks = tasks.filter(x => x.id !== id);
+  saveTasks();
+  renderTasks();
+}
+
+function setFilter(f, btn){
+  currentFilter = f;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderTasks();
+}
+
+function isToday(dateStr){
+  if(!dateStr) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return dateStr === today;
+}
+
+function isOverdue(task){
+  if(task.done || !task.date) return false;
+  const due = new Date(task.date + 'T' + (task.time || '23:59'));
+  return due < new Date();
+}
+
+function renderTasks(){
+  const list = document.getElementById('taskList');
+  let filtered = tasks;
+  if(currentFilter === 'pending') filtered = tasks.filter(t => !t.done);
+  if(currentFilter === 'done') filtered = tasks.filter(t => t.done);
+  if(currentFilter === 'today') filtered = tasks.filter(t => isToday(t.date));
+
+  if(filtered.length === 0){
+    list.innerHTML = '<div class="empty">Nothing here yet. Add a task above to get started.</div>';
+  } else {
+    list.innerHTML = filtered.map(t => `
+      <div class="task ${t.done ? 'done' : ''} ${isOverdue(t) ? 'overdue' : ''}">
+        <div class="check" onclick="toggleDone('${t.id}')"></div>
+        <div class="task-body">
+          <div class="task-title">${escapeHTML(t.title)}</div>
+          <div class="task-meta">
+            <span class="badge ${t.priority}">${t.priority}</span>
+            <span>${t.category}</span>
+            ${t.date ? `<span>📅 ${t.date}${t.time ? ' · ' + t.time : ''}</span>` : ''}
+            ${t.notify ? '<span>🔔</span>' : ''}
+            ${isOverdue(t) ? '<span style="color:var(--red)">Overdue</span>' : ''}
+          </div>
+          ${t.notes ? `<div class="task-meta">${escapeHTML(t.notes)}</div>` : ''}
+        </div>
+        <div class="task-actions">
+          <button class="icon-btn" onclick="deleteTask('${t.id}')" title="Delete">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('statTotal').textContent = tasks.length;
+  document.getElementById('statPending').textContent = tasks.filter(t => !t.done).length;
+  document.getElementById('statDone').textContent = tasks.filter(t => t.done).length;
+  document.getElementById('statToday').textContent = tasks.filter(t => isToday(t.date)).length;
+}
+
+/* ======================= DIARY ======================= */
+function selectMood(mood, btn){
+  selectedMood = mood;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function addDiaryEntry(){
+  const text = document.getElementById('diaryText').value.trim();
+  if(!text){ showToast('Write something before saving.'); return; }
+  const date = document.getElementById('diaryDate').value || new Date().toISOString().split('T')[0];
+
+  diary.unshift({
+    id: 'diary_' + Date.now(),
+    date,
+    mood: selectedMood,
+    text,
+    createdAt: Date.now()
+  });
+  saveDiary();
+
+  document.getElementById('diaryText').value = '';
+  document.getElementById('diaryDate').value = '';
+  renderDiary();
+  showToast('Diary entry saved.');
+}
+
+function deleteDiaryEntry(id){
+  diary = diary.filter(d => d.id !== id);
+  saveDiary();
+  renderDiary();
+}
+
+function renderDiary(){
+  const list = document.getElementById('diaryList');
+  const q = (document.getElementById('diarySearch').value || '').toLowerCase();
+  let filtered = diary;
+  if(q) filtered = diary.filter(d => d.text.toLowerCase().includes(q) || d.date.includes(q));
+
+  if(filtered.length === 0){
+    list.innerHTML = '<div class="empty">No diary entries yet. Your reflections will show up here.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(d => `
+    <div class="diary-entry">
+      <div class="d-head">
+        <span class="d-date">${d.date}</span>
+        <span class="d-mood">${d.mood}</span>
+      </div>
+      <div class="d-text">${escapeHTML(d.text)}</div>
+      <div style="text-align:right;margin-top:10px;">
+        <button class="icon-btn" onclick="deleteDiaryEntry('${d.id}')" title="Delete">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ======================= UTIL ======================= */
+function escapeHTML(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ======================= INIT ======================= */
+document.getElementById('diaryDate').value = new Date().toISOString().split('T')[0];
+updateNotifBadge();
+renderTasks();
+renderDiary();
+</script>
+</body>
+</html>
